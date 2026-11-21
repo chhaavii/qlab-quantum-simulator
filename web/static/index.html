@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QLab — state-vector quantum simulator</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="#top">
+    <span class="mark">ψ</span>
+    <span class="brand-text">
+      <strong>QLab</strong>
+      <small>state-vector quantum simulator</small>
+    </span>
+  </a>
+  <nav>
+    <a href="#circuit">Circuit</a>
+    <a href="#grover">Grover</a>
+    <a href="#entanglement">Entanglement</a>
+    <a href="#bb84">BB84</a>
+    <a href="#gravity">Gravity</a>
+  </nav>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <p class="eyebrow">NumPy only · no quantum SDK</p>
+    <h1>Run the report's experiments<br>in the browser.</h1>
+    <p class="lede">
+      Every panel calls the same <code>qlab</code> package that
+      <code>demo.py</code> runs: the state-vector register, the algorithms,
+      the entanglement measures, the BB84 simulation and the
+      Bose–Marletto–Vedral gravity model.
+    </p>
+    <div class="hero-stats">
+      <div><strong>2<sup>n</sup></strong><span>amplitudes, complex</span></div>
+      <div><strong>14</strong><span>automated tests</span></div>
+      <div><strong>0</strong><span>quantum SDKs</span></div>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------ circuit -->
+  <section id="circuit" class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Circuit playground</h2>
+        <p>Build a circuit gate by gate and watch the state vector react.</p>
+      </div>
+      <label class="inline-field">
+        Qubits
+        <select id="q-count">
+          <option>1</option><option selected>2</option><option>3</option>
+          <option>4</option><option>5</option><option>6</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="grid two">
+      <div class="card">
+        <h3>Gate palette</h3>
+        <p class="hint">Qubit 0 is the most significant bit.</p>
+
+        <div class="slot">
+          <label for="g-target">Single-qubit target</label>
+          <select id="g-target"></select>
+        </div>
+        <div class="btn-row" id="single-gates">
+          <button data-gate="H" title="Hadamard">H</button>
+          <button data-gate="X" title="Pauli X">X</button>
+          <button data-gate="Y" title="Pauli Y">Y</button>
+          <button data-gate="Z" title="Pauli Z">Z</button>
+          <button data-gate="S" title="Phase π/2">S</button>
+          <button data-gate="T" title="Phase π/4">T</button>
+        </div>
+
+        <div class="two-slots" id="two-qubit-slots">
+          <div class="slot">
+            <label for="g-control">Control</label>
+            <select id="g-control"></select>
+          </div>
+          <div class="slot">
+            <label for="g-ctarget">Target</label>
+            <select id="g-ctarget"></select>
+          </div>
+        </div>
+        <div class="btn-row" id="two-qubit-gates">
+          <button data-gate="CNOT">CNOT</button>
+          <button data-gate="CZ">CZ</button>
+          <button data-gate="SWAP">SWAP</button>
+        </div>
+        <p class="error" id="circuit-error"></p>
+      </div>
+
+      <div class="card">
+        <h3>Circuit <span class="count" id="gate-count">0 gates</span></h3>
+        <ol class="gate-list" id="gate-list">
+          <li class="empty">No gates yet — the register is in |0…0⟩.</li>
+        </ol>
+        <div class="btn-row">
+          <button class="ghost" id="undo-btn">Undo</button>
+          <button class="ghost" id="clear-btn">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid two">
+      <div class="card">
+        <h3>State vector</h3>
+        <p class="hint">Bar height is probability; colour is the phase of the amplitude.</p>
+        <div class="bars" id="amp-chart"></div>
+        <div class="phase-key">
+          <span>phase</span>
+          <span>−π</span>
+          <i class="swatch" style="background:linear-gradient(90deg,hsl(190 85% 60%),hsl(235 85% 62%),hsl(280 85% 62%))"></i>
+          <span>+π</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Measured shots</h3>
+        <p class="hint" id="shots-hint">1024 projective measurements of the whole register.</p>
+        <div class="bars small" id="shot-chart"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------- grover -->
+  <section id="grover" class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Grover search</h2>
+        <p>Amplitude amplification over the useful iteration window.</p>
+      </div>
+    </div>
+
+    <div class="card form-row">
+      <label class="inline-field">Qubits
+        <select id="grover-n">
+          <option>2</option><option selected>3</option><option>4</option>
+          <option>5</option><option>6</option>
+        </select>
+      </label>
+      <label class="inline-field">Marked item
+        <select id="grover-marked"></select>
+      </label>
+      <button id="grover-run">Run search</button>
+    </div>
+
+    <div class="stat-row" id="grover-stats"></div>
+
+    <div class="grid two">
+      <div class="card">
+        <h3>Success probability vs iterations</h3>
+        <div class="chart" id="grover-curve"></div>
+      </div>
+      <div class="card">
+        <h3>Final distribution</h3>
+        <div class="bars" id="grover-bars"></div>
+      </div>
+    </div>
+    <p class="error" id="grover-error"></p>
+  </section>
+
+  <!-- ------------------------------------------------------- entanglement -->
+  <section id="entanglement" class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Entanglement measures</h2>
+        <p>The state cos θ |00⟩ + sin θ |11⟩ as θ sweeps from product to Bell.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <label class="slider-field">
+        <span>θ / π</span>
+        <input type="range" id="theta" min="0" max="0.5" step="0.0025" value="0.25">
+        <output id="theta-out">0.250</output>
+      </label>
+      <div class="bars" id="ent-bars"></div>
+    </div>
+
+    <div class="stat-row" id="ent-stats"></div>
+    <p class="error" id="ent-error"></p>
+  </section>
+
+  <!-- ------------------------------------------------------------- bb84 -->
+  <section id="bb84" class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>BB84 key exchange</h2>
+        <p>Sift on matching bases, then look at the quantum bit error rate.</p>
+      </div>
+    </div>
+
+    <div class="card form-row">
+      <label class="inline-field">Raw bits
+        <input type="number" id="bb84-bits" min="200" max="8000" step="100" value="1600">
+      </label>
+      <label class="toggle">
+        <input type="checkbox" id="bb84-eve">
+        <span>Intercept–resend eavesdropper</span>
+      </label>
+      <button id="bb84-run">Run exchange</button>
+    </div>
+
+    <div class="stat-row" id="bb84-stats"></div>
+    <div class="card">
+      <h3>First sifted bits</h3>
+      <p class="hint">Red cells disagree between Alice and Bob.</p>
+      <div class="bit-strips" id="bb84-bits-view"></div>
+    </div>
+    <p class="error" id="bb84-error"></p>
+  </section>
+
+  <!-- ---------------------------------------------------------- gravity -->
+  <section id="gravity" class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Gravity-induced entanglement</h2>
+        <p>Bose–Marletto–Vedral: signal grows as <code>|sin(Δφ/2)|</code>, coherence decays as <code>e<sup>−t/T₂</sup></code>.</p>
+      </div>
+    </div>
+
+    <div class="grid two">
+      <div class="card">
+        <h3>Experiment</h3>
+        <label class="slider-field">
+          <span>Mass m</span>
+          <input type="range" id="g-mass" min="-14" max="-11" step="0.05" value="-12">
+          <output id="g-mass-out">1.0×10⁻¹² kg</output>
+        </label>
+        <label class="slider-field">
+          <span>Distance d</span>
+          <input type="range" id="g-distance" min="0.2" max="5" step="0.05" value="1">
+          <output id="g-distance-out">1.00 mm</output>
+        </label>
+        <label class="slider-field">
+          <span>Separation s</span>
+          <input type="range" id="g-separation" min="20" max="500" step="5" value="250">
+          <output id="g-separation-out">250 µm</output>
+        </label>
+        <label class="slider-field">
+          <span>Coherence T₂</span>
+          <input type="range" id="g-coherence" min="0.01" max="2" step="0.01" value="0.2">
+          <output id="g-coherence-out">0.20 s</output>
+        </label>
+        <p class="formula">
+          Δφ = (G m² t / ħ) · (1/d + 1/(d+s) − 2/(d+s/2))
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Concurrence vs interaction time</h3>
+        <div class="chart" id="gravity-chart"></div>
+        <p class="hint" id="gravity-hint"></p>
+      </div>
+    </div>
+
+    <div class="stat-row" id="gravity-stats"></div>
+    <p class="error" id="gravity-error"></p>
+  </section>
+</main>
+
+<footer>
+  <p>
+    QLab · built from scratch with NumPy — the frontend is a thin JSON layer over
+    <code>qlab/</code>, so the browser and <code>demo.py</code> always agree.
+  </p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
