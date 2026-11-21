@@ -13,6 +13,7 @@ model.
 python3 -m pip install -r requirements.txt
 python3 -m pytest -q      # the fourteen automated tests
 python3 demo.py           # reproduce the numbers in the report
+python3 web/app.py        # the browser frontend on http://localhost:8000
 ```
 
 ## Layout
@@ -28,7 +29,40 @@ qlab/
   gravity.py        BMV phase, dephasing, optimal interaction time
 tests/test_qlab.py  the fourteen checks from the report
 demo.py             runs every experiment and prints the results
+web/app.py          small JSON server in front of qlab (stdlib only)
+web/static/         the single-page interface (HTML, CSS, JS)
 ```
+
+## Web frontend
+
+`web/app.py` serves a single-page interface on top of the same `qlab` package,
+so the browser and `demo.py` can never disagree.  It uses only the Python
+standard library (no Flask, no bundler):
+
+```bash
+python3 web/app.py            # http://localhost:8000
+python3 web/app.py --port 9000
+```
+
+The page has five hands-on panels:
+
+* **Circuit playground** -- add H/X/Y/Z/S/T, CNOT, CZ and SWAP gates to a
+  register of up to six qubits, see the complex amplitudes (bar height is
+  probability, colour is phase) and 1024 measured shots.
+* **Grover** -- choose the number of qubits and the marked item, then compare
+  the success probability with classical guessing and watch the amplification
+  curve against the iteration count.
+* **Entanglement measures** -- sweep `theta` through
+  `cos(theta)|00> + sin(theta)|11>` and watch entropy, concurrence and
+  negativity go from 0 to their Bell-state values.
+* **BB84** -- run a key exchange with or without an intercept-resend
+  eavesdropper and read the QBER next to the 11% threshold.
+* **Gravity** -- drag the mass, distance, separation and `T2` sliders and see
+  the BMV concurrence curve, the optimal interaction time and the phase at
+  that time.
+
+The API is plain JSON, one endpoint per panel: `POST /api/circuit`,
+`/api/grover`, `/api/entanglement`, `/api/bb84`, `/api/gravity`.
 
 ## Conventions
 
