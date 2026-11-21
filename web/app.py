@@ -6,7 +6,9 @@ nothing beyond the packages already in ``requirements.txt``::
 
     python3 web/app.py            # then open http://localhost:8000
 
-Every endpoint takes and returns JSON (POST):
+Every endpoint takes and returns JSON.  Parameters may be sent as a query
+string (GET) or as a JSON object body (POST); the browser frontend uses GET so
+that it also works behind preview proxies that drop request bodies:
 
     /api/circuit        build a circuit from a gate list, return its state
     /api/grover         Grover search, with a success-vs-iterations curve
@@ -23,7 +25,7 @@ import mimetypes
 import os
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 import numpy as np
 
@@ -295,6 +297,18 @@ ROUTES = {
 }
 
 
+def query_payload(query: str) -> dict:
+    """Turn ``?qubits=3&gates=[...]`` into the payload the handlers expect."""
+    payload = {}
+    for key, values in parse_qs(query, keep_blank_values=True).items():
+        raw = values[-1]
+        try:
+            payload[key] = json.loads(raw)
+        except json.JSONDecodeError:
+            payload[key] = raw
+    return payload
+
+
 # ---------------------------------------------------------------------- server
 class QLabHandler(BaseHTTPRequestHandler):
     server_version = "QLab/1.0"
@@ -303,11 +317,20 @@ class QLabHandler(BaseHTTPRequestHandler):
         sys.stderr.write("%s %s\n" % (self.address_string(), fmt % args))
 
     def do_GET(self):  # noqa: N802 - BaseHTTPRequestHandler API
-        path = urlparse(self.path).path
-        if path.startswith("/api/"):
-            self._send_json({"error": "this endpoint expects POST"}, 405)
+        parsed = urlparse(self.path)
+        handler = ROUTES.get(parsed.path)
+        if handler is not None:
+            try:
+                self._send_json(handler(query_payload(parsed.query)))
+            except Exception as exc:  # surface the problem to the interface
+                self._send_json({"error": str(exc) or type(exc).__name__}, 400)
             return
-        self._serve_static("/index.html" if path in ("", "/") else path)
+        if parsed.path.startswith("/api/"):
+            self._send_json({"error": f"no such endpoint: {parsed.path}"}, 404)
+            return
+        self._serve_static(
+            "/index.html" if parsed.path in ("", "/") else parsed.path
+        )
 
     def do_POST(self):  # noqa: N802 - BaseHTTPRequestHandler API
         path = urlparse(self.path).path
