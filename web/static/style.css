@@ -144,7 +144,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 clamp(18px, 4vw, 40px) 80px
 .hint { margin-bottom: 12px; font-size: 0.82rem; }
 .panel-head code { font-size: 0.82em; }
 
-.grid { display: grid; gap: 16px; }
+.grid { display: grid; gap: 16px; align-items: start; }
 .grid.two { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
 .grid.two + .grid.two { margin-top: 16px; }
 
@@ -378,9 +378,10 @@ input[type="range"]::-moz-range-thumb {
 .bars {
   display: flex;
   align-items: flex-end;
-  gap: 4px;
+  justify-content: center;
+  gap: 6px;
   height: 190px;
-  padding-top: 6px;
+  padding-top: 20px;
 }
 .bars.small { height: 150px; }
 .bars:empty::after {
@@ -394,6 +395,7 @@ input[type="range"]::-moz-range-thumb {
 .bar-col {
   flex: 1 1 0;
   min-width: 8px;
+  max-width: 88px;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -401,6 +403,18 @@ input[type="range"]::-moz-range-thumb {
   align-items: center;
   gap: 6px;
 }
+
+.bar-value {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 100%;
+}
+
+/* dozens of amplitudes: the per-column numbers would be unreadable */
+.bars.dense .bar-value { display: none; }
 
 .bar-track {
   position: relative;
@@ -481,6 +495,7 @@ footer {
 footer p { margin: 0; color: var(--muted); font-size: 0.82rem; max-width: 70ch; margin-inline: auto; }
 
 @media (max-width: 620px) {
+  .stat-row { grid-template-columns: 1fr; }
   .topbar { flex-direction: column; align-items: flex-start; gap: 10px; }
   .topbar nav { width: 100%; }
   .slider-field { grid-template-columns: 1fr; gap: 6px; }
