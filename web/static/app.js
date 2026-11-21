@@ -23,11 +23,16 @@ function formatNumber(value, digits = 3) {
 
 const percent = (value, digits = 1) => `${(100 * value).toFixed(digits)}%`;
 
-async function api(path, body) {
-  const response = await fetch(path, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body ?? {}),
+async function api(path, params) {
+  // GET with a query string: POST bodies are dropped by some preview proxies,
+  // which would leave every panel silently showing its defaults.
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(params ?? {})) {
+    query.set(key, typeof value === "string" ? value : JSON.stringify(value));
+  }
+  const response = await fetch(`${path}?${query}`, {
+    headers: { Accept: "application/json" },
+    cache: "no-store",
   });
   let data = {};
   try {
@@ -43,6 +48,7 @@ async function api(path, body) {
 function renderBars(container, items, options = {}) {
   container.innerHTML = "";
   if (!items.length) return;
+  container.classList.toggle("dense", items.length > 12);
   const max = Math.max(options.max ?? 0, ...items.map((item) => item.value), 1e-12);
   const fragment = document.createDocumentFragment();
 
@@ -50,6 +56,10 @@ function renderBars(container, items, options = {}) {
     const column = document.createElement("div");
     column.className = "bar-col";
     if (item.title) column.title = item.title;
+
+    const value = document.createElement("div");
+    value.className = "bar-value";
+    value.textContent = item.caption ?? percent(item.value, item.value >= 0.1 ? 1 : 2);
 
     const track = document.createElement("div");
     track.className = "bar-track";
@@ -65,7 +75,7 @@ function renderBars(container, items, options = {}) {
     label.className = "bar-label";
     label.textContent = item.label;
 
-    column.append(track, label);
+    column.append(value, track, label);
     fragment.appendChild(column);
   }
   container.appendChild(fragment);
@@ -190,6 +200,11 @@ function syncCircuitControls() {
   fillQubitSelect($("#g-target"), circuit.n);
   fillQubitSelect($("#g-control"), circuit.n);
   fillQubitSelect($("#g-ctarget"), circuit.n, Math.min(1, circuit.n - 1));
+  const control = $("#g-control");
+  const target = $("#g-ctarget");
+  if (circuit.n > 1 && control.value === target.value) {
+    target.value = String((Number(control.value) + 1) % circuit.n);
+  }
   const single = circuit.n < 2;
   $$("#two-qubit-slots select, #two-qubit-gates button").forEach((element) => {
     element.disabled = single;
@@ -255,6 +270,7 @@ function renderCircuitState(data) {
     entries.map(([bits, shots]) => ({
       label: `|${bits}⟩`,
       value: shots / largest,
+      caption: String(shots),
       title: `${shots} of ${data.shots} shots`,
     })),
   );
@@ -579,7 +595,7 @@ async function refreshGravity() {
       },
       {
         label: "Optimal time t_opt",
-        value: `${data.best.time.toExponential(2)} s`,
+        value: `${formatNumber(data.best.time, 4)} s`,
         sub: "2/k · arctan(k·T₂/2)",
       },
       {
