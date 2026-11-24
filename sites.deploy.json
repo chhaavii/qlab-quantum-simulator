@@ -1,18 +1,8 @@
-## Layout
-
-```
-qlab/
-  register.py       state tensor, gates, controlled gates, measurement
-  gates.py          2x2 gate matrices
-  algorithms.py     Bell/GHZ, teleportation, Deutsch-Jozsa, Grover, QFT,
-                    phase estimation
-  entanglement.py   Schmidt coefficients, entropy, concurrence, negativity
-  bb84.py           BB84 key exchange with optional intercept-resend Eve
-  gravity.py        BMV phase, dephasing, optimal interaction time
-tests/test_qlab.py  the fourteen checks from the report
-demo.py             runs every experiment and prints the results
-web/app.py          small JSON server in front of qlab (stdlib only)
-web/static/         the single-page interface (HTML, CSS, JS)
-worker/index.js     the same API in JavaScript, for the hosted demo
-sites.deploy.json   deployment manifest pairing that Worker with web/static
-```
+{
+  "entrypoint": "index.js",
+  "compatibilityDate": "2026-11-01",
+  "modules": [
+    { "name": "index.js", "type": "esm", "path": "./worker/index.js" }
+  ],
+  "assetsDirectory": "./web/static"
+}
