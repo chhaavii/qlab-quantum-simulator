@@ -7,6 +7,9 @@ estimation, teleportation, three entanglement measures, BB84 with an
 eavesdropper, and the Bose-Marletto-Vedral (BMV) gravity-induced entanglement
 model.
 
+**Live site:** <https://qlab-quantum-simulator-l4e9zj.freebuff.site> -- the same
+five panels, hosted on Cloudflare Workers.
+
 ## Install and run
 
 ```bash
