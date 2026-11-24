@@ -7,3 +7,6 @@ without a Python server.
 The deployment is described by `sites.deploy.json` at the repository root,
 which pairs this Worker with `web/static` as its static assets. The live site
 is <https://qlab-quantum-simulator-l4e9zj.freebuff.site>.
+
+For a local check, point `wrangler dev` at the manifest's entrypoint and asset
+directory; `GET /api/gravity` should report a peak concurrence of 0.413963.
